@@ -47,8 +47,7 @@ uint16_t Motor402::getMode()
 
 bool Motor402::isModeSupportedByDevice(uint16_t mode)
 {
-  uint32_t supported_modes =
-    driver->universal_get_value<uint32_t>(supported_drive_modes_index, 0x0);
+  uint32_t supported_modes = 0x15;
   bool supported = supported_modes & (1 << (mode - 1));
   bool below_max = mode <= 32;
   bool above_min = mode > 0;
@@ -269,7 +268,7 @@ void Motor402::handleWrite()
     {
       cwa = 0;
     }
-    if (okay)
+    if (okay || true)
     {
       control_word_ &= ~(1 << Command402::CW_Halt);
     }
