@@ -2,9 +2,24 @@
 Changelog for package canopen_tests
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.2.9 (2024-04-16)
+0.3.4 (2026-05-24)
 ------------------
 
+0.3.3 (2026-05-22)
+------------------
+* Merge pull request `#404 <https://github.com/ros-industrial/ros2_canopen/issues/404>`_. Implement CiA 402-2 multi-channel support for multiple axes per CANopen node
+* Contributors: Benjamin Maidel, Sven, Tim Clephas, Vishnuprasad Prachandabhanu, ipa-vsp
+
+0.3.2 (2025-12-05)
+------------------
+* Enhance SimpleSlave class with vendor ID parsing and adjust bus configuration timeouts
+* Multiple SDO types for slaves (`#278 <https://github.com/ros-industrial/ros2_canopen/issues/278>`_)
+  Co-authored-by: Kurtis Thrush <kthrush@jlg.com>
+  Co-authored-by: Christoph Hellmann Santos <christoph.hellmann.santos@ipa.fraunhofer.de>
+* Contributors: Christoph Hellmann Santos
+
+0.2.9 (2024-04-16)
+------------------
 0.3.1 (2025-06-23)
 ------------------
 
@@ -59,7 +74,6 @@ Changelog for package canopen_tests
   * Remove mkdir in install dir from cogen and dcfgen
   This causes a permission denied error on buildfarm.
   The install command creates it anyways
-  ---------
 * Contributors: Christoph Hellmann Santos
 
 0.2.2 (2023-06-21)

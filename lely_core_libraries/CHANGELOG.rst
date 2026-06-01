@@ -2,10 +2,22 @@
 Changelog for package lely_core_libraries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-0.2.9 (2024-04-16)
+0.3.4 (2026-05-24)
 ------------------
-* Update the lely_core_libraries hash to the latest.
-* Contributors: Chris Lalancette, Vishnuprasad Prachandabhanu
+* Merge pull request `#433 <https://github.com/ros-industrial/ros2_canopen/issues/433>`_ from ros-industrial/432-lyrical-compatibility
+* Update external project lely-core and apply patches for C23/GCC14 compatibility
+* Contributors: Vishnuprasad Prachandabhanu, ipa-vsp
+
+0.3.3 (2026-05-22)
+------------------
+* Merge branch 'master' into tutorial-fixes
+* Merge branch 'master' into const_and_other
+* Merge branch 'ros-industrial:master' into support-real32
+* Merge branch 'ros-industrial:master' into named-can-register
+* Contributors: Sven, Tim Clephas, Vishnuprasad Prachandabhanu
+
+0.3.2 (2025-12-05)
+------------------
 
 0.3.1 (2025-06-23)
 ------------------
@@ -26,6 +38,11 @@ Changelog for package lely_core_libraries
   This will fix the building of the lely_core_libraries
   on Ubuntu 24.04.
 * Contributors: Chris Lalancette, Vishnuprasad Prachandabhanu, ipa-vsp
+
+0.2.9 (2024-04-16)
+------------------
+* Update the lely_core_libraries hash to the latest.
+* Contributors: Chris Lalancette, Vishnuprasad Prachandabhanu
 
 0.2.8 (2024-01-19)
 ------------------
