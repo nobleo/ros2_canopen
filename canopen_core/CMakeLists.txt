@@ -26,6 +26,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
+find_package(yaml-cpp REQUIRED)
 include(ConfigExtras.cmake)
 
 add_library(node_canopen_driver
@@ -48,6 +49,9 @@ target_link_libraries(node_canopen_driver PUBLIC
   rclcpp_lifecycle::rclcpp_lifecycle
   yaml-cpp
 )
+target_link_libraries(node_canopen_driver
+  yaml-cpp::yaml-cpp
+)
 
 add_library(node_canopen_master
   SHARED
@@ -69,7 +73,9 @@ target_link_libraries(node_canopen_master PUBLIC
   rclcpp_lifecycle::rclcpp_lifecycle
   yaml-cpp
 )
-
+target_link_libraries(node_canopen_master
+  yaml-cpp::yaml-cpp
+)
 
 add_library(device_container
   SHARED
