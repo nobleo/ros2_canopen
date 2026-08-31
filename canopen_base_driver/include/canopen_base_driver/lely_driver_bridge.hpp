@@ -37,10 +37,6 @@
 #include <thread>
 #include <vector>
 
-#include <boost/lockfree/queue.hpp>
-#include <boost/optional.hpp>
-#include <boost/thread.hpp>
-
 #include "canopen_core/exchange.hpp"
 
 using namespace std::chrono_literals;
@@ -427,6 +423,12 @@ public:
     pdo_map_ = dictionary_->createPDOMapping();
     sdo_timeout = timeout;
     boot_timeout_ = boot_timeout;
+  }
+
+  bool has_object(uint16_t idx, uint8_t subidx)
+  {
+    std::scoped_lock<std::mutex> lck(this->dictionary_mutex_);
+    return this->dictionary_->find(idx, subidx) != nullptr;
   }
 
   /**
