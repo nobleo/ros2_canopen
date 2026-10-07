@@ -47,12 +47,23 @@ uint16_t Motor402::getMode()
 
 bool Motor402::isModeSupportedByDevice(uint16_t mode)
 {
-  uint32_t supported_modes =
-    driver->universal_get_value<uint32_t>(get_channel_index(supported_drive_modes_index), 0x0);
-  bool supported = supported_modes & (1 << (mode - 1));
   bool below_max = mode <= 32;
   bool above_min = mode > 0;
-  return below_max && above_min && supported;
+  if (!below_max || !above_min)
+  {
+    return false;
+  }
+
+  int64_t cached = supported_modes_cache_.load();
+  if (cached < 0)
+  {
+    // universal_get_value() falls back to the EDS-declared default value when the device
+    // doesn't answer the SDO upload. Cache the result so repeated mode switches don't
+    // re-trigger a blocking SDO timeout on devices that never actually respond.
+    cached = driver->universal_get_value<uint32_t>(get_channel_index(supported_drive_modes_index), 0x0);
+    supported_modes_cache_.store(cached);
+  }
+  return cached & (1 << (mode - 1));
 }
 void Motor402::registerMode(uint16_t id, const ModeSharedPtr & m)
 {
@@ -273,7 +284,7 @@ void Motor402::handleWrite()
     {
       cwa = 0;
     }
-    if (okay)
+    if (okay || release_halt_without_target_)
     {
       control_word_ &= ~(1 << Command402::CW_Halt);
     }

@@ -93,6 +93,9 @@ protected:
 
   ros2_canopen::State402::InternalState switching_state_;
   int homing_timeout_seconds_;
+  // Opt-in workaround for non-compliant drives that refuse to accept a mode-of-operation
+  // change while CW_Halt is asserted (see `release_halt_without_target` in bus.yml).
+  bool release_halt_without_target_;
 
   void publish();
   virtual void poll_timer_callback() override;
