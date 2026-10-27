@@ -95,6 +95,7 @@ protected:
   ros2_canopen::State402::InternalState switching_state_;
   int homing_timeout_seconds_;
   std::optional<uint32_t> supported_drive_modes_;
+  bool release_halt_without_target_;
 
   void publish();
   virtual void poll_timer_callback() override;
