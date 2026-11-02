@@ -212,6 +212,7 @@ void NodeCanopen402Driver<NODETYPE>::configure_common()
   std::optional<double> offset_pos_from_dev;
   std::optional<int> switching_state;
   std::optional<int> homing_timeout_seconds;
+  std::optional<bool> release_halt_without_target;
   try
   {
     scale_pos_to_dev = std::optional(this->config_["scale_pos_to_dev"].template as<double>());
@@ -284,6 +285,14 @@ void NodeCanopen402Driver<NODETYPE>::configure_common()
   catch (...)
   {
   }
+  try
+  {
+    release_halt_without_target =
+      std::optional(this->config_["release_halt_without_target"].template as<bool>());
+  }
+  catch (...)
+  {
+  }
 
   scale_pos_to_dev_ = scale_pos_to_dev.value_or(1000.0);
   scale_pos_from_dev_ = scale_pos_from_dev.value_or(0.001);
@@ -295,6 +304,7 @@ void NodeCanopen402Driver<NODETYPE>::configure_common()
   switching_state_ = (ros2_canopen::State402::InternalState)switching_state.value_or(
     (int)ros2_canopen::State402::InternalState::Operation_Enable);
   homing_timeout_seconds_ = homing_timeout_seconds.value_or(10);
+  release_halt_without_target_ = release_halt_without_target.value_or(false);
 
   // Multi-channel configuration
   num_channels_ = 1;
@@ -539,6 +549,7 @@ void NodeCanopen402Driver<NODETYPE>::add_to_master()
     {
       channels_[ch].motor->set_supported_drive_modes(*supported_drive_modes_);
     }
+    channels_[ch].motor->set_release_halt_without_target(release_halt_without_target_);
   }
 }
 
