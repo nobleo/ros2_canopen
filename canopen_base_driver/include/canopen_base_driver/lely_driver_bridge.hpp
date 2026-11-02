@@ -432,6 +432,23 @@ public:
   }
 
   /**
+   * @brief Attempt a live SDO upload, without falling back to the EDS default value.
+   *
+   * Some devices declare an optional object in their EDS/DCF without actually
+   * responding to SDO uploads for it. Unlike @ref universal_get_value, this does not
+   * mask that case by silently returning the EDS default value on timeout/abort, so
+   * callers can detect unresponsive objects and cache that they should not be
+   * queried again (avoiding a blocking @ref sdo_timeout stall on every call).
+   *
+   * @return true if the device actually answered the SDO upload request.
+   */
+  template <typename T>
+  bool try_sdo_read_typed(uint16_t idx, uint8_t subidx, T & value)
+  {
+    return sync_sdo_read_typed<T>(idx, subidx, value, this->sdo_timeout);
+  }
+
+  /**
    * @brief Asynchronous SDO Write
    *
    * Writes the data passed to the function via SDO to

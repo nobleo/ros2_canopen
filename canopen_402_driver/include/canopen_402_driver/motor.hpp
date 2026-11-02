@@ -69,7 +69,8 @@ public:
     state_switch_timeout_(5),
     homing_timeout_seconds_(homing_timeout_seconds),
     channel_(channel),
-    effort_support_state_(-1)
+    effort_support_state_(-1),
+    supported_modes_cache_(-1)
   {
     this->driver = driver;
     // Calculate channel offset according to CiA 402-2: base_index + (channel * 0x800)
@@ -233,15 +234,28 @@ public:
       {
         return 0.0;
       }
-      bool has_object = this->driver->has_object(idx, 0);
-      effort_support_state_.store(has_object ? 1 : 0);
-      if (!has_object)
+      if (!this->driver->has_object(idx, 0))
       {
+        effort_support_state_.store(0);
         RCLCPP_WARN(
           rclcpp::get_logger("canopen_402_driver"),
           "Effort interface disabled: object 0x6077:00 not found in EDS/OD.");
         return 0.0;
       }
+      // The object is declared in the EDS, but some devices don't actually answer SDO
+      // uploads for it. Probe once and disable permanently on timeout, instead of
+      // blocking the read loop for sdo_timeout on every single cycle.
+      int16_t probed = 0;
+      if (!this->driver->try_sdo_read_typed<int16_t>(idx, 0, probed))
+      {
+        effort_support_state_.store(0);
+        RCLCPP_WARN(
+          rclcpp::get_logger("canopen_402_driver"),
+          "Effort interface disabled: object 0x6077:00 did not respond to SDO upload.");
+        return 0.0;
+      }
+      effort_support_state_.store(1);
+      return (double)probed;
     }
     return (double)this->driver->universal_get_value<int16_t>(idx, 0);
   }
@@ -343,6 +357,10 @@ private:
 
   // -1 unknown, 0 missing, 1 present
   mutable std::atomic<int> effort_support_state_;
+
+  // -1 not yet read; otherwise the cached value of object 0x6502 (or the assumed
+  // fallback) so switchMode() doesn't re-trigger a blocking SDO read every call.
+  std::atomic<int64_t> supported_modes_cache_;
 };
 
 }  // namespace ros2_canopen
