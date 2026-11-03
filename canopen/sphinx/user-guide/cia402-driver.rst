@@ -124,6 +124,9 @@ Additional parameters that can be used in bus.yml for this driver.
   * - switching_state
     - int
     - The state to switch the operation mode in.
+  * - release_halt_without_target
+    - bool
+    - Release the halt bit (controlword bit 8) in Operation Enabled even when no target has been set for the active mode. Workaround for drives that refuse to change the mode of operation while halt is set. Caution: the drive will act on the target value currently stored in its object dictionary. Default: false.
   * - supported_drive_modes
     - uint32
     - Overrides the supported drive modes (object 0x6502) instead of reading them from the device. Use this for drives that do not answer SDO requests for 0x6502 or report incorrect values. Uses the 0x6502 bitmask format, e.g. 0x25 for profiled position, profiled velocity and homing. Applies to all channels. Default: read from device.
