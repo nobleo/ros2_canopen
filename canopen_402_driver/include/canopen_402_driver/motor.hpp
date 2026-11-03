@@ -232,15 +232,25 @@ public:
       {
         return 0.0;
       }
-      bool has_object = this->driver->has_object(idx, 0);
-      effort_support_state_.store(has_object ? 1 : 0);
-      if (!has_object)
+      if (!this->driver->has_object(idx, 0))
       {
+        effort_support_state_.store(0);
         RCLCPP_WARN(
           rclcpp::get_logger("canopen_402_driver"),
           "Effort interface disabled: object 0x6077:00 not found in EDS/OD.");
         return 0.0;
       }
+      // Effort is read every control cycle, so only support it when it arrives by TPDO.
+      // Polling it via SDO would block the read loop for up to sdo_timeout per cycle.
+      if (!this->driver->is_tpdo_mapped(idx, 0))
+      {
+        effort_support_state_.store(0);
+        RCLCPP_WARN(
+          rclcpp::get_logger("canopen_402_driver"),
+          "Effort interface disabled: object 0x6077:00 is not mapped into a TPDO.");
+        return 0.0;
+      }
+      effort_support_state_.store(1);
     }
     return (double)this->driver->universal_get_value<int16_t>(idx, 0);
   }
@@ -258,6 +268,36 @@ public:
   {
     this->enable_diagnostics_.store(enable);
     this->diag_collector_ = status;
+  }
+
+  /**
+   * @brief Override the supported drive modes (object 0x6502) reported by the device.
+   *
+   * Some drives do not answer SDO uploads of 0x6502 or report a value that does not
+   * match their actual capabilities. When an override is set, the device is not queried
+   * and the given bitmask is used instead. Must be called before the modes are registered.
+   *
+   * @param supported_drive_modes Bitmask in 0x6502 format (bit n set means mode n+1 is supported)
+   */
+  void set_supported_drive_modes(uint32_t supported_drive_modes)
+  {
+    supported_drive_modes_.store(supported_drive_modes);
+  }
+
+  /**
+   * @brief Release CW_Halt in Operation Enabled even if the active mode has no target.
+   *
+   * By default the halt bit stays set until the selected mode has received a target.
+   * Some drives refuse to change their mode of operation while the halt bit is set,
+   * which makes the mode switch time out before a target can ever be sent.
+   * Enabling this works around such drives. Note that the drive will then act on the
+   * target value that is currently stored in its object dictionary.
+   *
+   * @param release_halt true to release the halt bit without a target
+   */
+  void set_release_halt_without_target(bool release_halt)
+  {
+    release_halt_without_target_ = release_halt;
   }
 
 private:
@@ -290,6 +330,7 @@ private:
   const bool monitor_mode_;
   const std::chrono::seconds state_switch_timeout_;
   const int homing_timeout_seconds_;
+  bool release_halt_without_target_ = false;
 
   std::shared_ptr<LelyDriverBridge> driver;
 
@@ -303,6 +344,9 @@ private:
   const uint16_t op_mode_display_index = 0x6061;
   const uint16_t op_mode_index = 0x6060;
   const uint16_t supported_drive_modes_index = 0x6502;
+  // -1 until read from the device (or overridden); then the 0x6502 bitmask. Cached so that
+  // mode switches don't repeat a blocking SDO upload on drives that never answer it.
+  std::atomic<int64_t> supported_drive_modes_{-1};
 
   // Diagnostic components
   std::atomic<bool> enable_diagnostics_;
