@@ -432,20 +432,20 @@ public:
   }
 
   /**
-   * @brief Attempt a live SDO upload, without falling back to the EDS default value.
+   * @brief Check whether an object is mapped into one of the device's TPDOs.
    *
-   * Some devices declare an optional object in their EDS/DCF without actually
-   * responding to SDO uploads for it. Unlike @ref universal_get_value, this does not
-   * mask that case by silently returning the EDS default value on timeout/abort, so
-   * callers can detect unresponsive objects and cache that they should not be
-   * queried again (avoiding a blocking @ref sdo_timeout stall on every call).
-   *
-   * @return true if the device actually answered the SDO upload request.
+   * Values of TPDO-mapped objects are updated cyclically, so @ref universal_get_value
+   * reads them from the local dictionary instead of doing a blocking SDO upload.
    */
-  template <typename T>
-  bool try_sdo_read_typed(uint16_t idx, uint8_t subidx, T & value)
+  bool is_tpdo_mapped(uint16_t idx, uint8_t subidx) const
   {
-    return sync_sdo_read_typed<T>(idx, subidx, value, this->sdo_timeout);
+    auto object = this->pdo_map_->find(idx);
+    if (object == this->pdo_map_->end())
+    {
+      return false;
+    }
+    auto entry = object->second.find(subidx);
+    return entry != object->second.end() && entry->second.is_tpdo;
   }
 
   /**
@@ -535,7 +535,7 @@ public:
   }
 
   /**
-   * @brief Aynchronous SDO Read
+   * @brief Asynchronous SDO Read
    *
    * Reads the indicated SDO object from the connected
    * device.
@@ -801,17 +801,7 @@ public:
   const T universal_get_value(uint16_t index, uint8_t subindex)
   {
     T value = 0;
-    bool is_tpdo = false;
-    if (this->pdo_map_->find(index) != this->pdo_map_->end())
-    {
-      auto object = this->pdo_map_->at(index);
-      if (object.find(subindex) != object.end())
-      {
-        auto entry = object.at(subindex);
-        is_tpdo = entry.is_tpdo;
-      }
-    }
-    if (!is_tpdo)
+    if (!is_tpdo_mapped(index, subindex))
     {
       if (sync_sdo_read_typed<T>(index, subindex, value, this->sdo_timeout))
       {

@@ -242,20 +242,17 @@ public:
           "Effort interface disabled: object 0x6077:00 not found in EDS/OD.");
         return 0.0;
       }
-      // The object is declared in the EDS, but some devices don't actually answer SDO
-      // uploads for it. Probe once and disable permanently on timeout, instead of
-      // blocking the read loop for sdo_timeout on every single cycle.
-      int16_t probed = 0;
-      if (!this->driver->try_sdo_read_typed<int16_t>(idx, 0, probed))
+      // Effort is read every control cycle, so only support it when it arrives by TPDO.
+      // Polling it via SDO would block the read loop for up to sdo_timeout per cycle.
+      if (!this->driver->is_tpdo_mapped(idx, 0))
       {
         effort_support_state_.store(0);
         RCLCPP_WARN(
           rclcpp::get_logger("canopen_402_driver"),
-          "Effort interface disabled: object 0x6077:00 did not respond to SDO upload.");
+          "Effort interface disabled: object 0x6077:00 is not mapped into a TPDO.");
         return 0.0;
       }
       effort_support_state_.store(1);
-      return (double)probed;
     }
     return (double)this->driver->universal_get_value<int16_t>(idx, 0);
   }
